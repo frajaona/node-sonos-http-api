@@ -24,7 +24,8 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "sonos-discovery": "https://github.com/jishi/node-sonos-discovery/archive/v1.7.3.tar.gz",
-    "wav-file-info": "0.0.8"
+    "wav-file-info": "0.0.8",
+    "websocket": "^1.0.30"
   },
   "engines": {
     "node": ">=4.0.0",

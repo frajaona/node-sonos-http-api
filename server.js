@@ -8,6 +8,9 @@ const logger = require('sonos-discovery/lib/helpers/logger');
 const SonosHttpAPI = require('./lib/sonos-http-api.js');
 const nodeStatic = require('node-static');
 const settings = require('./settings');
+const url = require('url');
+
+const WebSocketServer = require('websocket').server;
 
 const fileServer = new nodeStatic.Server(settings.webroot);
 const discovery = new SonosSystem(settings);
@@ -75,10 +78,33 @@ if (settings.https) {
 }
 
 server = http.createServer(requestHandler);
+var wss = new WebSocketServer({ httpServer: server });
 
 process.on('unhandledRejection', (err) => {
   logger.error(err);
 });
+
+wss.on('request',function (request) {
+  var reqUrl = url.parse(request.resourceURL,true);
+  if ( reqUrl.pathname == "/ws" ) {
+    if ( request.requestedProtocols.includes('live') )
+      request.accept("live",request.origin);
+    else
+      request.reject();
+  } else {
+    logger.info("got websocket attempt for wrong endpoint");
+  }
+});
+ 
+wss.on('connect', function (connection) {
+  if ( connection.protocol == 'live' ) {
+    logger.info('got websocket connection');
+    api.addWebsocketClient(connection);
+  } else {
+    connection.drop();
+  }
+});
+
 
 let host = settings.ip;
 server.listen(settings.port, host, function () {
